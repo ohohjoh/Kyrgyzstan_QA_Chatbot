@@ -4,5 +4,5 @@ langchain==0.2.7
 langchain-community==0.2.7
 langchain-openai==0.1.13
 chromadb==0.5.3
-unstructured[all-docs]==0.14.4  # 버전에 따라 문제가 발생할 수 있으니 최신 안정 버전 확인
+unstructured==0.14.4
 tiktoken==0.7.0
