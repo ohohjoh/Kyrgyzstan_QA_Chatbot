@@ -5,4 +5,4 @@ langchain-community==0.2.7
 langchain-openai==0.1.13
 chromadb==0.5.3
 unstructured==0.18.1  # Python 3.13.5와 호환되는 최신 버전으로 업데이트 (unstructured[all-docs] 대신 unstructured 사용)
-tiktoken==0.7.0        # 이 버전을 유지하려면 아래 설명 참고
+tiktoken
