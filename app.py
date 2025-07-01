@@ -1,7 +1,7 @@
 # app.py
 
 # Streamlit Cloud 환경에서만 pysqlite3를 사용하도록 조건부 임포트
-# 로컬 개발 환경에서는 오류를 방지하고 기본 sqlite3를 사용합니다.
+# 로컬 개발 환경에서는 오류를 방지하고, 기본 sqlite3를 사용합니다.
 import os
 if os.environ.get('STREAMLIT_SERVER_PORT') or os.environ.get('IS_STREAMLIT_CLOUD'):
     try:
@@ -21,7 +21,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
-from langchain.schema import SystemMessage # SystemMessage를 명시적으로 임포트합니다.
+# from langchain.schema import SystemMessage # 이 줄은 더 이상 필요 없으므로 제거했습니다.
 
 # .env 파일 로드 (API 키를 환경 변수로 불러오기)
 load_dotenv()
@@ -117,7 +117,6 @@ if st.session_state.vectorstore:
     @st.cache_resource(show_spinner=False)
     def get_qa_chain(_vectorstore_instance):
         # 챗봇의 역할과 지침을 정의하는 SystemMessage
-        # 여기에 당신이 원하는 구체적인 지침을 작성하세요.
         system_prompt = """
         당신은 KBS(한국방송공사)와 방송기술인협회로 구성된 컨소시엄의 ODA(공적개발원조) 및 KOICA(한국국제협력단) 사업 전문 자문가입니다.
         컨소시엄은 현재 키르기스스탄 정부가 공모하는 ODA/KOICA 사업 수주를 목표로 하고 있습니다.
@@ -142,7 +141,7 @@ if st.session_state.vectorstore:
             openai_api_key=openai_api_key, 
             temperature=0.1, 
             model="gpt-3.5-turbo",
-            messages=[SystemMessage(content=system_prompt)] 
+            system_message=system_prompt # 이 부분이 변경되었습니다.
         )
         qa_chain = RetrievalQA.from_chain_type(
             llm=llm,
