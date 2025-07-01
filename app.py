@@ -21,6 +21,12 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
+from langchain.chat_models import ChatOpenAI
+from langchain.prompts.chat import (
+    ChatPromptTemplate,
+    SystemMessagePromptTemplate,
+    HumanMessagePromptTemplate
+)
 # from langchain.schema import SystemMessage # 이 줄은 더 이상 필요 없으므로 제거했습니다.
 
 # .env 파일 로드 (API 키를 환경 변수로 불러오기)
@@ -116,7 +122,7 @@ if st.session_state.vectorstore is None:
 if st.session_state.vectorstore:
     @st.cache_resource(show_spinner=False)
     def get_qa_chain(_vectorstore_instance):
-        # 챗봇의 역할과 지침을 정의하는 SystemMessage
+        # 1) 시스템 메시지 템플릿 정의
         system_prompt = """
         당신은 KBS(한국방송공사)와 방송기술인협회로 구성된 컨소시엄의 ODA(공적개발원조) 및 KOICA(한국국제협력단) 사업 전문 자문가입니다.
         컨소시엄은 현재 키르기스스탄 정부가 공모하는 ODA/KOICA 사업 수주를 목표로 하고 있습니다.
@@ -131,23 +137,32 @@ if st.session_state.vectorstore:
         6.  **답변 형식:**
             * 핵심 내용을 먼저 간결하게 요약하고, 필요한 경우 상세한 설명을 덧붙입니다.
             * 전문 용어는 명확하게 설명해주되, 컨소시엄 관계자들이 이해하기 쉽도록 풀어서 설명합니다.
-        7.  **출처 명시:** 답변의 마지막에는 항상 "답변 참고 자료" 섹션에 제시되는 출처 문서의 제목을 간결하게 언급하여 답변의 신뢰도를 높입니다. (예: "이 정보는 [문서 제목]에서 발췌했습니다." 또는 "상세 내용은 [문서 제목]을 참고하세요.")
-        8.  **정보 부족 시 대처:** 만약 질문에 대한 정보가 제공된 문서 내에 충분하지 않거나 찾을 수 없다면, "죄송합니다. 현재 문서에서는 해당 정보를 찾을 수 없습니다. 더 자세한 정보가 필요하시면 관련 문서를 추가해주시면 도움을 드릴 수 있습니다."라고 답변합니다.
-
-        컨소시엄이 키르기스스탄 ODA/KOICA 사업을 성공적으로 이끌 수 있도록 당신의 전문성을 최대한 발휘하여 지원해주세요.
+        7.  **출처 명시:** 답변의 마지막에는 항상 "답변 참고 자료" 섹션에 제시되는 출처 문서의 제목을 간결하게 언급하여 답변의 신뢰도를 높입니다.
+        8.  **정보 부족 시 대처:** 만약 질문에 대한 정보가 제공된 문서 내에 충분하지 않거나 찾을 수 없다면,
+        "죄송합니다. 현재 문서에서는 해당 정보를 찾을 수 없습니다. 더 자세한 정보가 필요하시면 관련 문서를 추가해주시면 도움을 드릴 수 있습니다."
+        라고 답변합니다.
         """
-        
+
+        # 2) 사용자 질문 부분 템플릿 정의
+        chat_prompt = ChatPromptTemplate.from_messages([
+            SystemMessagePromptTemplate.from_template(system_prompt),
+            HumanMessagePromptTemplate.from_template("{query}")
+        ])
+
+        # 3) LLM 인스턴스 생성
         llm = ChatOpenAI(
-            openai_api_key=openai_api_key, 
-            temperature=0.1, 
-            model="gpt-3.5-turbo",
-            system_message=system_prompt # 이 부분이 변경되었습니다.
+            openai_api_key=openai_api_key,
+            temperature=0.1,
+            model_name="gpt-3.5-turbo"
         )
+
+        # 4) RetrievalQA 체인 구성
         qa_chain = RetrievalQA.from_chain_type(
             llm=llm,
             chain_type="stuff",
             retriever=_vectorstore_instance.as_retriever(search_kwargs={"k": 5}),
-            return_source_documents=True
+            return_source_documents=True,
+            chain_type_kwargs={"prompt": chat_prompt}
         )
         return qa_chain
 
