@@ -3,6 +3,7 @@ python-dotenv==1.0.1
 langchain==0.2.7
 langchain-community==0.2.7
 langchain-openai==0.1.13
-chromadb==0.5.3
-unstructured[all-docs]==0.18.1  # 이 부분을 수정해주세요!
+chromadb                  # 버전 지정 없이 최신 버전 설치
+pysqlite3-binary          # 이 라인을 추가해주세요!
+unstructured[all-docs]==0.18.1
 tiktoken
